@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102a43">
+<title>DZ Wholesale Scanner</title>
+<style>
+:root{--bg:#f3f6fa;--card:#fff;--ink:#142536;--muted:#627386;--line:#dce4ed;--accent:#176b87;--good:#16845b;--bad:#bd3d3d;--warn:#a76a12}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:#102a43;color:#fff;padding:22px 16px}header .wrap,main{max-width:980px;margin:auto}
+h1{font-size:23px;margin:0 0 6px}header p{margin:0;color:#d6e4ee;font-size:14px}
+main{padding:16px}.panel{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:16px;margin-bottom:14px}
+h2{font-size:18px;margin:0 0 12px}.hint{font-size:13px;color:var(--muted);line-height:1.6}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:13px;color:var(--muted);margin:8px 0 5px}
+input,textarea,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-size:16px}
+button{border:0;border-radius:10px;padding:12px 15px;font:inherit;font-weight:650;cursor:pointer;min-height:44px}
+.primary{background:var(--accent);color:#fff}.secondary{background:#e8f0f5;color:#16445a}.danger{background:#fae9e9;color:#9e2929}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions button{flex:1}
+.product{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:9px;background:#fff}
+.product-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.product-name{font-weight:750}.small{font-size:12px;color:var(--muted)}
+.badge{font-size:11px;padding:4px 8px;border-radius:20px;background:#edf2f6;color:#43566a;white-space:nowrap}
+.result{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+.source{display:block;overflow-wrap:anywhere;color:#08658b;font-size:13px;margin-top:5px}
+.status{padding:10px;border-radius:10px;background:#edf4f8;font-size:13px;margin-top:10px}
+.status.error{background:#fff0f0;color:#9e2929}.status.ok{background:#eaf7f0;color:#126342}
+.price{font-size:19px;font-weight:800}.green{color:var(--good)}.red{color:var(--bad)}.amber{color:var(--warn)}
+footer{max-width:980px;margin:0 auto;padding:0 16px 24px;color:var(--muted);font-size:12px;line-height:1.6}
+@media(max-width:600px){.row{grid-template-columns:1fr}main{padding:11px}.panel{padding:13px}h1{font-size:20px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>🇩🇿 DZ Wholesale Scanner</h1>
+<p>مراقبة أسعار المنتجات ومصادرها في الجزائر — البحث عند الطلب</p>
+</div></header>
+<main>
+<section class="panel">
+<h2>إضافة منتج</h2>
+<div class="row">
+<div><label for="name">اسم المنتج *</label><input id="name" placeholder="مثال: AWANE STYLE" maxlength="100"></div>
+<div><label for="brand">العلامة / النوع (اختياري)</label><input id="brand" placeholder="مثال: serviettes hygiéniques" maxlength="100"></div>
+</div>
+<label for="aliases">أسماء أو تهجئات أخرى (اختياري)</label>
+<input id="aliases" placeholder="مثال: Awane style, ألوان ستايل">
+<div class="row">
+<div><label for="target">سعر مرجعي بالدينار (اختياري)</label><input id="target" type="number" min="0" step="0.01" placeholder="مثال: 110"></div>
+<div><label for="kind">نوع السعر المطلوب</label><select id="kind"><option value="wholesale">الجملة / Gros</option><option value="retail">التجزئة / Détail</option><option value="both">كلاهما مع التمييز</option></select></div>
+</div>
+<div class="actions"><button class="primary" id="add">＋ إضافة المنتج</button></div>
+<p class="hint">تُحفظ قائمة المنتجات على هذا الهاتف والمتصفح. أضف كل منتج مرة واحدة ثم استخدم زر التحديث للبحث عن القائمة كاملة.</p>
+</section>
+
+<section class="panel">
+<div class="product-head"><h2>قائمة المنتجات</h2><span class="badge" id="count">0 منتج</span></div>
+<div id="products"><p class="hint">لم تضف منتجات بعد.</p></div>
+<div class="actions">
+<button class="primary" id="refresh">🔎 تحديث جميع الأسعار الآن</button>
+<button class="secondary" id="export">تصدير القائمة</button>
+<button class="secondary" id="importBtn">استيراد قائمة</button>
+<input id="importFile" type="file" accept="application/json" hidden>
+</div>
+<div id="status" class="status" aria-live="polite">أضف المنتجات، ثم اضغط على زر التحديث. يلزم نشر واجهة البحث وإعداد مفتاح Gemini لتفعيل البحث المباشر.</div>
+</section>
+
+<section class="panel">
+<h2>آخر نتائج البحث</h2>
+<div id="results"><p class="hint">ستظهر هنا الأسعار والمصادر بعد أول عملية بحث.</p></div>
+</section>
+</main>
+<footer>
+<strong>تنبيه مهم:</strong> نتائج الإنترنت ليست ضماناً لتوفر السلعة أو صحة سعر الجملة. تحقّق من المصدر والبائع قبل الشراء. إذا لم يعثر البحث على دليل حديث، سيعرض النظام «لم يتم العثور على سعر موثوق» بدلاً من اختراع سعر. لا تضع مفاتيح API داخل هذه الصفحة؛ تحفظ في إعدادات الخادم فقط.
+</footer>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const KEY = "dzws_products_v1";
+let products = load();
+let busy = false;
+
+function load(){ try { const x=JSON.parse(localStorage.getItem(KEY)||"[]"); return Array.isArray(x)?x:[]; } catch { return []; } }
+function save(){ localStorage.setItem(KEY,JSON.stringify(products)); }
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function money(v){let n=Number(v);return Number.isFinite(n)?n.toLocaleString("fr-DZ")+" DA":"غير محدد";}
+function setStatus(msg,kind=""){ $("status").className="status "+kind; $("status").textContent=msg; }
+function render(){
+ $("count").textContent=products.length+" منتج";
+ if(!products.length){$("products").innerHTML='<p class="hint">لم تضف منتجات بعد.</p>';return;}
+ $("products").innerHTML=products.map((p,i)=>`<article class="product">
+ <div class="product-head"><div><div class="product-name">${esc(p.name)}</div><div class="small">${esc(p.brand||"")}${p.aliases?" • "+esc(p.aliases):""}</div></div><span class="badge">${p.kind==="retail"?"تجزئة":p.kind==="both"?"جملة + تجزئة":"جملة"}</span></div>
+ <div class="small">السعر المرجعي: ${p.target?money(p.target):"غير محدد"} • أُضيف: ${new Date(p.created).toLocaleDateString("fr-DZ")}</div>
+ <div class="actions"><button class="secondary" data-edit="${i}">تعديل</button><button class="danger" data-del="${i}">حذف</button></div></article>`).join("");
+}
+$("add").addEventListener("click",()=>{
+ const name=$("name").value.trim(); if(!name){setStatus("اكتب اسم المنتج أولاً.","error");return;}
+ const target=$("target").value.trim();
+ products.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),name,brand:$("brand").value.trim(),aliases:$("aliases").value.trim(),target:target?Number(target):null,kind:$("kind").value,created:new Date().toISOString()});
+ save();render();["name","brand","aliases","target"].forEach(id=>$(id).value="");setStatus("تمت إضافة المنتج إلى قائمتك.","ok");
+});
+$("products").addEventListener("click",e=>{
+ const del=e.target.closest("[data-del]");const edit=e.target.closest("[data-edit]");
+ if(del){const i=Number(del.dataset.del);if(confirm("حذف هذا المنتج؟")){products.splice(i,1);save();render();}}
+ if(edit){const i=Number(edit.dataset.edit),p=products[i];$("name").value=p.name;$("brand").value=p.brand||"";$("aliases").value=p.aliases||"";$("target").value=p.target??"";$("kind").value=p.kind||"wholesale";products.splice(i,1);save();render();window.scrollTo({top:0,behavior:"smooth"});}
+});
+function showResults(data){
+ const rows=Array.isArray(data.results)?data.results:[];
+ if(!rows.length){$("results").innerHTML='<p class="hint">لم تُرجع عملية البحث نتائج قابلة للتحقق.</p>';return;}
+ $("results").innerHTML=rows.map(r=>{
+ const offers=Array.isArray(r.offers)?r.offers:[];
+ return `<article class="product"><div class="product-head"><div class="product-name">${esc(r.product||"منتج")}</div><span class="badge">${esc(r.status||"نتيجة بحث")}</span></div>
+ <p class="hint">${esc(r.summary||"")}</p>
+ ${offers.length?offers.map(o=>`<div class="result"><div class="price">${o.price_dzd!=null?money(o.price_dzd):"السعر غير مؤكد"}</div>
+ <div>${esc(o.seller||"المورد غير محدد")} • ${esc(o.wilaya||"الولاية غير محددة")}</div>
+ <div class="small">نوع السعر: ${esc(o.price_type||"غير محدد")} • التاريخ: ${esc(o.date||"غير مذكور")} • الثقة: ${esc(o.confidence||"غير محددة")}</div>
+ ${o.notes?`<p class="hint">${esc(o.notes)}</p>`:""}
+ ${o.url?`<a class="source" href="${esc(o.url)}" target="_blank" rel="noopener noreferrer">فتح المصدر الأصلي ↗</a>`:"<span class='small'>لا يوجد رابط مصدر مباشر — لا تعتمد على السعر.</span>"}</div>`).join(""):'<p class="hint">لم يتم العثور على سعر منشور موثوق.</p>'}
+ </article>`;
+ }).join("");
+}
+$("refresh").addEventListener("click",async()=>{
+ if(busy)return;if(!products.length){setStatus("أضف منتجاً واحداً على الأقل.","error");return;}
+ busy=true;$("refresh").disabled=true;$("refresh").textContent="جارٍ البحث…";setStatus("يتم البحث عن المنتجات واحداً تلو الآخر. قد تستغرق العملية بعض الوقت…");
+ $("results").innerHTML="";
+ try{
+  const response=await fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({products})});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error||"تعذر تنفيذ البحث.");
+  showResults(data);setStatus("اكتمل البحث. راجع رابط كل مصدر وتاريخ نشره قبل اعتماد السعر.","ok");
+ }catch(err){setStatus(err.message+" تأكد من نشر Worker وإضافة مفتاح Gemini في إعدادات الخادم.","error");}
+ finally{busy=false;$("refresh").disabled=false;$("refresh").textContent="🔎 تحديث جميع الأسعار الآن";}
+});
+$("export").addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify(products,null,2)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download="dz-wholesale-products.json";a.click();URL.revokeObjectURL(a.href);
+});
+$("importBtn").addEventListener("click",()=>$("importFile").click());
+$("importFile").addEventListener("change",async e=>{
+ const f=e.target.files[0];if(!f)return;
+ try{const data=JSON.parse(await f.text());if(!Array.isArray(data))throw 0;products=data.filter(p=>p&&typeof p.name==="string").slice(0,1000);save();render();setStatus("تم استيراد القائمة.","ok");}
+ catch{setStatus("ملف غير صالح. اختر ملف JSON صادر من التطبيق.","error");}
+ e.target.value="";
+});
+render();
+})();
+</script>
+</body></html>
